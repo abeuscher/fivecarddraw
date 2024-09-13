@@ -80,7 +80,7 @@ export enum RoundState {
   HandComplete,
 }
 
-export type PlayerAction = 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'draw' | 'drop';
+export type PlayerAction = 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'draw' | 'drop' | 'ante' | 'newHand';
 
 export interface Player {
   id: string;
@@ -111,8 +111,8 @@ export interface GameState {
 }
 
 export type Outcome = {
-  winners: Array<CardStack>;
-  losers: Array<CardStack>;
+  winners: Array<Player>;
+  losers: Array<Player>;
   handName: string;
   handRank: number;
   hands: Array<{ id: string; cards: Card[] }>;

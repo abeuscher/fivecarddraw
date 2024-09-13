@@ -1,4 +1,4 @@
-import { Card, CardStack, Outcome, Rank, Suit } from '@/types/'
+import { Card, Outcome, Player, Rank, Suit } from '@/types/'
 
 /**
  * Class for evaluating poker hands and determining winners.
@@ -266,18 +266,18 @@ export default class PokerHandEvaluator {
    * @returns An object containing the winners, losers, hand name, and hand rank.
    * @throws Error if no players are provided.
    */
-  public static evaluateWinner(players: Array<CardStack>): Outcome {
+  public static evaluateWinner(players: Array<Player>): Outcome {
     if (players.length === 0) {
       throw new Error('At least one player is required')
     }
   
-    let winners: Array<CardStack> = [players[0]]
-    let losers: Array<CardStack> = []
-    let winningHand = this.evaluateHand(players[0].cards)
+    let winners: Array<Player> = [players[0]]
+    let losers: Array<Player> = []
+    let winningHand = this.evaluateHand(players[0].hand)
   
     for (let i = 1; i < players.length; i++) {
       const currentPlayer = players[i]
-      const currentHand = this.evaluateHand(currentPlayer.cards)
+      const currentHand = this.evaluateHand(currentPlayer.hand)
   
       if (currentHand.rank > winningHand.rank) {
         losers = losers.concat(winners)
@@ -285,8 +285,8 @@ export default class PokerHandEvaluator {
         winningHand = currentHand
       } else if (currentHand.rank === winningHand.rank) {
         const comparison = this.compareEqualHands(
-          winners[0].cards,
-          currentPlayer.cards,
+          winners[0].hand,
+          currentPlayer.hand,
           winningHand.name
         )
         if (comparison < 0) {
@@ -303,10 +303,10 @@ export default class PokerHandEvaluator {
     }
   
     const hands = players.map((player) => {
-      const playerHandType = this.evaluateHand(player.cards).name
+      const playerHandType = this.evaluateHand(player.hand).name
       return {
         id: player.id,
-        cards: this.getBestFiveCardHand(player.cards, playerHandType)
+        cards: this.getBestFiveCardHand(player.hand, playerHandType)
       }
     })
   

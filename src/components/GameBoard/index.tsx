@@ -1,12 +1,13 @@
 'use client'
 
+import { PlayerAction, RoundState } from '@/types'
 import React, { useEffect, useRef } from 'react'
 import {
+  advanceRound,
   initializeGame,
   performPlayerAction,
   placeBet,
-  resolveShowdown,
-  startNewHand
+  resolveShowdown
 } from '@/store/gameSlice'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -14,7 +15,6 @@ import CardStack from '@/components/CardStack'
 import ControlBar from '@/components/ControlBar'
 import MessageBox from '@/components/MessageBox'
 import { RootState } from '@/store'
-import { RoundState } from '@/types'
 import { setMessageWithExpiration } from '@/store/MessageBox'
 import styles from '@/components/GameBoard/GameBoard.module.scss'
 
@@ -27,7 +27,7 @@ const GameBoard: React.FC = () => {
 
   useEffect(() => {
     if (!initRef.current) {
-      dispatch(initializeGame({ playerCount: 2, startingChips: 1000, cardsPerPlayer: 7 }))
+      dispatch(initializeGame({ playerCount: 5, startingChips: 1000, cardsPerPlayer: 7 }))
       initRef.current = true
     }
 
@@ -37,22 +37,10 @@ const GameBoard: React.FC = () => {
       currentPlayerIndex < 0 ||
       currentPlayerIndex >= players.length
     ) {
-      console.error('Invalid player state or index:', { players, currentPlayerIndex })
       return // Early return if player state is invalid
     }
 
-    const currentPlayer = players[currentPlayerIndex]
-
     const handleRoundTransition = () => {
-      // Use a guard to ensure actions are dispatched only once per specific conditions
-      if (currentRound === RoundState.Ante && currentBet === 0) {
-        // Dispatch the ante bet only once
-        if (currentPlayer) {
-          dispatch(placeBet({ playerId: currentPlayer.id, amount: 1 })) // Example for ante
-        }
-        return // Avoid further re-renders by early return
-      }
-
       switch (currentRound) {
         case RoundState.FirstBetting:
           // Add a similar guard to ensure message dispatch is controlled
@@ -91,7 +79,7 @@ const GameBoard: React.FC = () => {
 
           break
         case RoundState.HandComplete:
-          dispatch(startNewHand())
+          console.log('You removed the start new hand function')
 
           setMessageWithExpiration({
             message: 'Hand complete. Starting new hand...',
@@ -101,7 +89,7 @@ const GameBoard: React.FC = () => {
 
           break
         default:
-          console.warn('Unhandled round state:', currentRound)
+        //console.warn('Unhandled round state:', currentRound)
       }
     }
 
@@ -132,6 +120,9 @@ const GameBoard: React.FC = () => {
 
   const handleAnteAction = (value: number) => {
     if (players[currentPlayerIndex]) {
+      if (currentPlayerIndex === players.length - 1) {
+        dispatch(advanceRound(RoundState.FirstBetting))
+      }
       dispatch(placeBet({ playerId: players[currentPlayerIndex].id, amount: value }))
       setMessageWithExpiration({
         message: `Player ${currentPlayerIndex + 1} placed ante.`,

@@ -58,6 +58,7 @@ const gameSlice = createSlice({
           }
         }
       })
+      //state.roundState = RoundState.Showdown
       setMessageWithExpiration({
         message: 'Game initialized. Ready to play!',
         type: 'info',
@@ -74,6 +75,7 @@ const gameSlice = createSlice({
     },
     placeBet: (state, action: PayloadAction<{ playerId: string; amount: number }>) => {
       const { playerId, amount } = action.payload
+      console.log('Placing bet:', playerId, amount)
       const player = state.players.find((p) => p.id === playerId)
       if (player && player.chips >= amount) {
         player.chips -= amount
@@ -83,6 +85,7 @@ const gameSlice = createSlice({
       } else {
         state.message = `Player ${player?.name} does not have enough chips to place this bet.`
       }
+      moveToNextPlayer(state)
     },
     performPlayerAction: (
       state,
@@ -158,18 +161,36 @@ const gameSlice = createSlice({
         state.roundState = RoundState.SecondBetting
       }
     },
+    advanceRound: (state, action: PayloadAction<RoundState>) => {
+      state.currentRound = action.payload
+      switch (action.payload) {
+        case RoundState.InitialDeal:
+          state.roundState = RoundState.FirstBetting
+          state.players.forEach((player) => (player.hasFolded = false))
+          break
+        case RoundState.FirstBetting:
+          state.roundState = RoundState.Draw
+          break
+        case RoundState.Draw:
+          state.roundState = RoundState.SecondBetting
+          break
+        case RoundState.SecondBetting:
+          state.roundState = RoundState.Showdown
+          break
+        case RoundState.Showdown:
+          state.roundState = RoundState.HandComplete
+          break
+        case RoundState.HandComplete:
+          state.roundState = RoundState.Ante
+          state.currentTurn++
+          rotateDealerAndCurrentPlayer(state)
+          break
+      }
+    },
     resolveShowdown: (state) => {
       const activePlayers = state.players.filter((player) => !player.hasFolded)
       if (activePlayers.length > 1) {
-        const playerHands = activePlayers.map((player) => ({
-          id: player.id,
-          cards: player.hand,
-          initialCards: 5,
-          order: 'ascending',
-          rules: [],
-          isHand: true
-        }))
-        const outcome = PokerHandEvaluator.evaluateWinner(playerHands)
+        const outcome = PokerHandEvaluator.evaluateWinner(activePlayers)
         outcome.winners.forEach((winner) => {
           const winningPlayer = state.players.find((p) => p.id === winner.id)
           if (winningPlayer) {
@@ -224,7 +245,7 @@ function moveToNextPlayer(state: GameState): void {
   }
 }
 
-export const { initializeGame, toggleCardSelection, placeBet, performPlayerAction, resolveShowdown } =
+export const { advanceRound, initializeGame, toggleCardSelection, placeBet, performPlayerAction, resolveShowdown } =
   gameSlice.actions
 
 export default gameSlice.reducer
