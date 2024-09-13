@@ -2,6 +2,7 @@
 
 import { PlayerAction, RoundState } from '@/types'
 import React, { useEffect, useRef } from 'react'
+import { RootState, useAppDispatch } from '@/store'
 import {
   advanceRound,
   initializeGame,
@@ -14,20 +15,19 @@ import { useDispatch, useSelector } from 'react-redux'
 import CardStack from '@/components/CardStack'
 import ControlBar from '@/components/ControlBar'
 import MessageBox from '@/components/MessageBox'
-import { RootState } from '@/store'
 import { setMessageWithExpiration } from '@/store/MessageBox'
 import styles from '@/components/GameBoard/GameBoard.module.scss'
 
 const GameBoard: React.FC = () => {
   const initRef = useRef(false)
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const { currentRound, currentPlayerIndex, players, currentBet } = useSelector(
     (state: RootState) => state.game
   )
 
   useEffect(() => {
     if (!initRef.current) {
-      dispatch(initializeGame({ playerCount: 5, startingChips: 1000, cardsPerPlayer: 7 }))
+      dispatch(initializeGame({ playerCount: 2, startingChips: 1000, cardsPerPlayer: 5 }))
       initRef.current = true
     }
 
@@ -44,49 +44,52 @@ const GameBoard: React.FC = () => {
       switch (currentRound) {
         case RoundState.FirstBetting:
           // Add a similar guard to ensure message dispatch is controlled
-
-          setMessageWithExpiration({
-            message: `First betting round begins. Player ${currentPlayerIndex + 1}'s turn.`,
-            type: 'info',
-            duration: 5000
-          })
-
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          dispatch(
+            setMessageWithExpiration({
+              message: `First betting round begins. Player ${currentPlayerIndex + 1}'s turn.`,
+              type: 'info' as any,
+              duration: 5000
+            })
+          )
           break
         case RoundState.Draw:
-          setMessageWithExpiration({
-            message: `Draw phase begins. Player ${currentPlayerIndex + 1}, select cards to discard.`,
-            type: 'info',
-            duration: 5000
-          })
-
+          dispatch(
+            setMessageWithExpiration({
+              message: `Draw phase begins. Player ${currentPlayerIndex + 1}, select cards to discard.`,
+              type: 'info',
+              duration: 5000
+            })
+          )
           break
         case RoundState.SecondBetting:
-          setMessageWithExpiration({
-            message: `Second betting round begins. Player ${currentPlayerIndex + 1}'s turn.`,
-            type: 'info',
-            duration: 5000
-          })
-
+          dispatch(
+            setMessageWithExpiration({
+              message: `Second betting round begins. Player ${currentPlayerIndex + 1}'s turn.`,
+              type: 'info',
+              duration: 5000
+            })
+          )
           break
         case RoundState.Showdown:
           dispatch(resolveShowdown())
-
-          setMessageWithExpiration({
-            message: 'Showdown! Revealing hands...',
-            type: 'info',
-            duration: 5000
-          })
-
+          dispatch(
+            setMessageWithExpiration({
+              message: 'Showdown! Revealing hands...',
+              type: 'info',
+              duration: 5000
+            })
+          )
           break
         case RoundState.HandComplete:
           console.log('You removed the start new hand function')
-
-          setMessageWithExpiration({
-            message: 'Hand complete. Starting new hand...',
-            type: 'info',
-            duration: 5000
-          })
-
+          dispatch(
+            setMessageWithExpiration({
+              message: 'Hand complete. Starting new hand...',
+              type: 'info',
+              duration: 5000
+            })
+          )
           break
         default:
         //console.warn('Unhandled round state:', currentRound)
@@ -124,11 +127,13 @@ const GameBoard: React.FC = () => {
         dispatch(advanceRound(RoundState.FirstBetting))
       }
       dispatch(placeBet({ playerId: players[currentPlayerIndex].id, amount: value }))
-      setMessageWithExpiration({
-        message: `Player ${currentPlayerIndex + 1} placed ante.`,
-        type: 'info',
-        duration: 3000
-      })
+      dispatch(
+        setMessageWithExpiration({
+          message: `Player ${currentPlayerIndex + 1} placed ante.`,
+          type: 'info',
+          duration: 3000
+        })
+      )
     }
   }
 
