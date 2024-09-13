@@ -1,0 +1,48 @@
+/* styles/CardStack.module.scss */
+.cardStack {
+  position: relative;
+  min-width: 5em;
+  height: 7em;
+  margin: 0.3em;
+  background-color: #ccc;
+  border-radius: 0.3em;
+  border: 5px solid transparent;
+}
+
+.highlight {
+  border-color: #666;
+  background-color: rgba(0, 255, 0, 0.1);
+}
+.cardstack-stacked {
+  display: flex;
+  .playing-card {
+    width: 0.1px;
+  }
+}
+.cardstack-fan {
+  width: 100%;
+  display: flex;
+  & > div {
+    flex-basis: 50px;
+    transform: rotate(10deg);
+  }
+}
+.cardstack-spread {
+  width: 100%;
+  display: flex;
+  & > div {
+    flex-basis: 50px;
+  }
+}
+.stack-label {
+  text-align: center;
+  font-size: 0.8em;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  display: block;
+  width: 100%;
+  z-index: 0;
+  &:hover {
+    opacity: 1;
+  }
+}
